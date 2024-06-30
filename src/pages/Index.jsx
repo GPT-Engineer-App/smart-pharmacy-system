@@ -20,6 +20,10 @@ const Index = () => {
   const [drugInteractions, setDrugInteractions] = useState([]);
   const [sales, setSales] = useState([]);
   const [newSale, setNewSale] = useState({ drug: "", quantity: 1 });
+  const [patients, setPatients] = useState([]);
+  const [medicationHistory, setMedicationHistory] = useState([]);
+  const [newPatient, setNewPatient] = useState({ patientName: "", patientAge: "", patientGender: "" });
+  const [newMedication, setNewMedication] = useState({ patient: "", medication: "", dosage: "" });
 
   useEffect(() => {
     inventory.forEach((item) => {
@@ -69,6 +73,26 @@ const Index = () => {
     } else {
       toast(`Insufficient stock for ${newSale.drug}`);
     }
+  };
+
+  const handlePatientChange = (e) => {
+    const { name, value } = e.target;
+    setNewPatient((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddPatient = () => {
+    setPatients((prev) => [...prev, { ...newPatient, id: patients.length + 1 }]);
+    setNewPatient({ patientName: "", patientAge: "", patientGender: "" });
+  };
+
+  const handleMedicationChange = (e) => {
+    const { name, value } = e.target;
+    setNewMedication((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleAddMedication = () => {
+    setMedicationHistory((prev) => [...prev, { ...newMedication, id: medicationHistory.length + 1 }]);
+    setNewMedication({ patient: "", medication: "", dosage: "" });
   };
 
   return (
@@ -226,6 +250,139 @@ const Index = () => {
           </Card>
         ))}
       </div>
+
+      <h2 className="text-2xl text-center mb-4">Patient Profiles</h2>
+      <div className="space-y-4">
+        {patients.map((patient) => (
+          <Card key={patient.id}>
+            <CardHeader>
+              <CardTitle>{patient.patientName}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Age: {patient.patientAge}</p>
+              <p>Gender: {patient.patientGender}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline">Add Patient</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Patient</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="patientName">Patient Name</Label>
+              <Input
+                id="patientName"
+                name="patientName"
+                value={newPatient.patientName}
+                onChange={handlePatientChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="patientAge">Age</Label>
+              <Input
+                id="patientAge"
+                name="patientAge"
+                type="number"
+                value={newPatient.patientAge}
+                onChange={handlePatientChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="patientGender">Gender</Label>
+              <Select
+                id="patientGender"
+                name="patientGender"
+                value={newPatient.patientGender}
+                onValueChange={(value) => setNewPatient((prev) => ({ ...prev, patientGender: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select gender" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="Male">Male</SelectItem>
+                  <SelectItem value="Female">Female</SelectItem>
+                  <SelectItem value="Other">Other</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <Button onClick={handleAddPatient}>Add Patient</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <h2 className="text-2xl text-center mb-4">Medication History</h2>
+      <div className="space-y-4">
+        {medicationHistory.map((medication) => (
+          <Card key={medication.id}>
+            <CardHeader>
+              <CardTitle>{medication.patient}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p>Medication: {medication.medication}</p>
+              <p>Dosage: {medication.dosage}</p>
+            </CardContent>
+          </Card>
+        ))}
+      </div>
+
+      <Dialog>
+        <DialogTrigger asChild>
+          <Button variant="outline">Add Medication</Button>
+        </DialogTrigger>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>New Medication</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="patient">Patient</Label>
+              <Select
+                id="patient"
+                name="patient"
+                value={newMedication.patient}
+                onValueChange={(value) => setNewMedication((prev) => ({ ...prev, patient: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a patient" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.patientName}>
+                      {patient.patientName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="medication">Medication</Label>
+              <Input
+                id="medication"
+                name="medication"
+                value={newMedication.medication}
+                onChange={handleMedicationChange}
+              />
+            </div>
+            <div>
+              <Label htmlFor="dosage">Dosage</Label>
+              <Input
+                id="dosage"
+                name="dosage"
+                value={newMedication.dosage}
+                onChange={handleMedicationChange}
+              />
+            </div>
+            <Button onClick={handleAddMedication}>Add Medication</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
