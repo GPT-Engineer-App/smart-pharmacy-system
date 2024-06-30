@@ -8,6 +8,31 @@ import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
+// AI Dosage Recommendation Function
+const recommendDosage = (patientData, medication) => {
+  // Example logic for dosage recommendation
+  const { age, weight, medicalHistory } = patientData;
+  let dosage = 0;
+
+  if (medication === "Aspirin") {
+    dosage = weight * 0.1; // Example: 0.1 mg per kg of body weight
+  } else if (medication === "Ibuprofen") {
+    dosage = weight * 0.2; // Example: 0.2 mg per kg of body weight
+  } else if (medication === "Paracetamol") {
+    dosage = weight * 0.15; // Example: 0.15 mg per kg of body weight
+  }
+
+  // Adjust dosage based on age and medical history
+  if (age > 65) {
+    dosage *= 0.8; // Reduce dosage for elderly patients
+  }
+  if (medicalHistory.includes("Kidney Disease")) {
+    dosage *= 0.7; // Further reduce dosage for patients with kidney disease
+  }
+
+  return dosage.toFixed(2); // Return dosage rounded to 2 decimal places
+};
+
 const Index = () => {
   const [inventory, setInventory] = useState([
     { id: 1, name: "Aspirin", stock: 20, expiration: "2023-12-01", price: 5 },
@@ -22,7 +47,7 @@ const Index = () => {
   const [newSale, setNewSale] = useState({ drug: "", quantity: 1 });
   const [patients, setPatients] = useState([]);
   const [medicationHistory, setMedicationHistory] = useState([]);
-  const [newPatient, setNewPatient] = useState({ patientName: "", patientAge: "", patientGender: "" });
+  const [newPatient, setNewPatient] = useState({ patientName: "", patientAge: "", patientGender: "", medicalHistory: "" });
   const [newMedication, setNewMedication] = useState({ patient: "", medication: "", dosage: "" });
 
   useEffect(() => {
@@ -42,6 +67,11 @@ const Index = () => {
   };
 
   const handleAddPrescription = () => {
+    const patient = patients.find((p) => p.patientName === newPrescription.patientName);
+    if (patient) {
+      const recommendedDosage = recommendDosage(patient, newPrescription.drug);
+      setNewPrescription((prev) => ({ ...prev, dosage: recommendedDosage }));
+    }
     setPrescriptions((prev) => [...prev, newPrescription]);
     setNewPrescription({ patientName: "", drug: "", dosage: "" });
     checkDrugInteractions(newPrescription.drug);
@@ -82,7 +112,7 @@ const Index = () => {
 
   const handleAddPatient = () => {
     setPatients((prev) => [...prev, { ...newPatient, id: patients.length + 1 }]);
-    setNewPatient({ patientName: "", patientAge: "", patientGender: "" });
+    setNewPatient({ patientName: "", patientAge: "", patientGender: "", medicalHistory: "" });
   };
 
   const handleMedicationChange = (e) => {
@@ -125,12 +155,23 @@ const Index = () => {
           <div className="space-y-4">
             <div>
               <Label htmlFor="patientName">Patient Name</Label>
-              <Input
+              <Select
                 id="patientName"
                 name="patientName"
                 value={newPrescription.patientName}
-                onChange={handlePrescriptionChange}
-              />
+                onValueChange={(value) => setNewPrescription((prev) => ({ ...prev, patientName: value }))}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select a patient" />
+                </SelectTrigger>
+                <SelectContent>
+                  {patients.map((patient) => (
+                    <SelectItem key={patient.id} value={patient.patientName}>
+                      {patient.patientName}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div>
               <Label htmlFor="drug">Drug</Label>
@@ -261,6 +302,7 @@ const Index = () => {
             <CardContent>
               <p>Age: {patient.patientAge}</p>
               <p>Gender: {patient.patientGender}</p>
+              <p>Medical History: {patient.medicalHistory}</p>
             </CardContent>
           </Card>
         ))}
@@ -311,6 +353,15 @@ const Index = () => {
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
+            </div>
+            <div>
+              <Label htmlFor="medicalHistory">Medical History</Label>
+              <Input
+                id="medicalHistory"
+                name="medicalHistory"
+                value={newPatient.medicalHistory}
+                onChange={handlePatientChange}
+              />
             </div>
             <Button onClick={handleAddPatient}>Add Patient</Button>
           </div>
